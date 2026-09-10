@@ -1,0 +1,9 @@
+{
+  "name":"Pokémon Collection",
+  "short_name":"Poké Collection",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#06111a",
+  "theme_color":"#07131d",
+  "description":"Tracker mobile della collezione Pokémon per allenatore"
+}
