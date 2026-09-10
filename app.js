@@ -2,7 +2,7 @@ const DATA = window.APP_DATA;
 const STORAGE='pokemon-collection-state-v5';
 const TRAINER_STORAGE='pokemon-collection-trainers-v1';
 const LEGACY_STORAGES=['pokemon-collection-state-v4','pokemon-collection-state-v3','pokemon-collection-state-v2','pokemon-collection-state'];
-const APP_VERSION='10.0.0';
+const APP_VERSION='11.0.0';
 const state={tab:'pokemon',query:'',region:'Tutti',view:null,owned:{},trainerOwned:{}};
 try{
   state.owned=JSON.parse(localStorage.getItem(STORAGE)||'null')||{};
@@ -30,7 +30,7 @@ function baseSlug(name){return name.toLowerCase().normalize('NFD').replace(/[\u0
 function apiSlug(name){const s=baseSlug(name);return POKEMON_ALIASES[s]||s}
 function imageSlug(name){let s=apiSlug(name);if(s==='ninetales-alola')s='ninetales-alolan';return s}
 function imgUrl(name){return `https://img.pokemondb.net/sprites/home/normal/${imageSlug(name)}.png`}
-function img(name,cls='poke-img'){return `<img class="${cls}" src="${imgUrl(name)}" alt="${esc(name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"> <div class="img-fallback" style="display:none">${esc(name[0]||'?')}</div>`}
+function img(name,cls='poke-img'){return `<img class="${cls}" src="${imgUrl(name)}" alt="${esc(name)}" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"> <div class="img-fallback" style="display:none">${esc(name[0]||'?')}</div>`}
 
 const TRAINER_SPRITES={
 'Rosso (Red)':['red'],'Blu (Blue)':['blue'],'Brock':['brock'],'Lorelei':['lorelei-gen1','lorelei-gen3','lorelei-lgpe'],'Bruno':['bruno'],'Agatha':['agatha-gen1','agatha-gen3'],'Lance':['lance'],'Giovanni':['giovanni'],'Prof. OAK':['oak'],
@@ -46,9 +46,29 @@ function trainerAvatar(name,cls='avatar'){
  const c=trainerCandidates(name);
  if(!c.length)return `<div class="${cls} trainer-fallback">${initials(name)}</div>`;
  const encoded=esc(JSON.stringify(c));
- return `<div class="${cls} trainer-avatar"><img src="https://play.pokemonshowdown.com/sprites/trainers/${c[0]}.png" data-candidates='${encoded}' data-index="0" alt="${esc(name)}" loading="lazy" onerror="trainerImgError(this,'${esc(initials(name))}')"></div>`
+ return `<div class="${cls} trainer-avatar"><img src="https://play.pokemonshowdown.com/sprites/trainers/${c[0]}.png" data-candidates='${encoded}' data-index="0" alt="${esc(name)}" loading="lazy" decoding="async" onerror="trainerImgError(this,'${esc(initials(name))}')"></div>`
 }
 window.trainerImgError=function(el,fallback){try{const a=JSON.parse(el.dataset.candidates||'[]');let i=Number(el.dataset.index||0)+1;if(i<a.length){el.dataset.index=i;el.src=`https://play.pokemonshowdown.com/sprites/trainers/${a[i]}.png`;return}}catch(e){}el.parentElement.classList.remove('trainer-avatar');el.parentElement.classList.add('trainer-fallback');el.parentElement.innerHTML=fallback}
+
+/* v11: warm every sprite once into the Service Worker cache.
+   This happens in the background; subsequent scrolling/opens use local Cache Storage. */
+let spriteWarmStarted=false;
+function allSpriteUrls(){
+  const urls=new Set();
+  pokemonIndex().forEach(p=>urls.add(imgUrl(p.name)));
+  Object.values(TRAINER_SPRITES).flat().forEach(s=>urls.add(`https://play.pokemonshowdown.com/sprites/trainers/${s}.png`));
+  return [...urls];
+}
+function warmSpriteCache(){
+  if(spriteWarmStarted||!('serviceWorker' in navigator))return;
+  spriteWarmStarted=true;
+  const send=()=>navigator.serviceWorker.ready.then(reg=>{
+    const sw=navigator.serviceWorker.controller||reg.active;
+    if(sw)sw.postMessage({type:'PRECACHE_SPRITES',urls:allSpriteUrls()});
+  }).catch(()=>{});
+  if('requestIdleCallback' in window)requestIdleCallback(send,{timeout:1800});
+  else setTimeout(send,500);
+}
 
 const TYPE_META={
  normal:['#8e9aa6','#596673'],fire:['#ff6b35','#b6252a'],water:['#46a6ff','#2456c7'],electric:['#ffd84a','#b77a08'],grass:['#56d778','#1c8d59'],ice:['#76e5f7','#2c91c4'],
@@ -89,3 +109,5 @@ function render(){let html;if(state.view?.type==='trainer')html=trainerDetail(st
 function bind(){document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;state.query='';state.region='Tutti';state.view=null;render()});document.querySelectorAll('[data-region]').forEach(b=>b.onclick=()=>{state.region=b.dataset.region;render()});const s=document.getElementById('search');if(s)s.oninput=e=>{const caret=e.target.selectionStart??e.target.value.length;state.query=e.target.value;render();const next=document.getElementById('search');if(next){next.focus({preventScroll:true});const pos=Math.min(caret,next.value.length);try{next.setSelectionRange(pos,pos)}catch(_){}}};document.querySelectorAll('[data-pokemon]').forEach(x=>x.onclick=()=>{state.view={type:'pokemon',name:decodeURIComponent(x.dataset.pokemon)};render()});document.querySelectorAll('[data-trainer-owned]').forEach(x=>x.onclick=e=>{e.stopPropagation();const t=DATA.trainers.find(y=>y.id===x.dataset.trainerOwned);if(t)setTrainerOwned(t,!isTrainerOwned(t))});document.querySelectorAll('[data-trainer]').forEach(x=>x.onclick=()=>{state.view={type:'trainer',id:x.dataset.trainer};render()});document.querySelectorAll('[data-back]').forEach(x=>x.onclick=()=>{state.view=null;render()});if(state.view?.type==='trainer'){const t=DATA.trainers.find(x=>x.id===state.view.id);document.querySelectorAll('[data-slot]').forEach(x=>x.onclick=()=>{const m=t.pokemon.find(y=>String(y.slot)===String(x.dataset.slot));setOwned(t,m,!isOwned(t,m))})}document.querySelectorAll('[data-owner-trainer]').forEach(x=>x.onclick=()=>{const t=DATA.trainers.find(y=>y.id===x.dataset.ownerTrainer);const m=t.pokemon.find(y=>String(y.slot)===String(x.dataset.ownerSlot));setOwned(t,m,!isOwned(t,m))})}
 render();
 if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v='+APP_VERSION);await reg.update()}catch(e){}})}
+
+window.addEventListener('load',()=>warmSpriteCache(),{once:true});

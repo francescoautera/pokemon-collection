@@ -1,4 +1,4 @@
-POKÉMON COLLECTION — v10.0.0
+POKÉMON COLLECTION — v11.0.0
 
 Novità v5
 - Nella Sala d'Onore il nome di un Pokémon posseduto è bianco; i mancanti restano attenuati.
@@ -13,7 +13,7 @@ GITHUB PAGES
 1. Sostituisci i file del repository con quelli di questa cartella.
 2. Fai commit/push su main.
 3. Apri GitHub Pages con rete attiva.
-4. In alto dovresti vedere v10.0.0 · Collezione.
+4. In alto dovresti vedere v11.0.0 · Collezione.
 
 V8: rimosso bordo/sfondo attorno allo sprite centrale dell'allenatore; corretto il cursore della barra di ricerca durante il filtraggio live.
 
