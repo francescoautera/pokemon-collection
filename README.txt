@@ -1,24 +1,20 @@
-POKEMON COLLECTION - PROTOTIPO PWA
+POKÉMON COLLECTION — v10.0.0
 
-Contenuto:
-- index.html: app
-- data.js: dati estratti da Collezione_Pokemon.xlsx
-- app.js / styles.css: logica e interfaccia
-- manifest.webmanifest / sw.js: installazione come PWA
+Novità v5
+- Nella Sala d'Onore il nome di un Pokémon posseduto è bianco; i mancanti restano attenuati.
+- Rimossa la lista duplicata dei 6 Pokémon sotto la Sala d'Onore: lo stato si cambia toccando direttamente i Pokémon intorno all'allenatore.
+- Aggiunto lo stato Allenatore posseduto / non posseduto, indipendente dal completamento della sua squadra.
+- Nella griglia Allenatori compare un check dedicato; in alto viene mostrato il totale allenatori posseduti.
+- Nel dettaglio allenatore è presente un pulsante Posseduto / Non posseduto.
+- Le assegnazioni Pokémon esistenti vengono migrate automaticamente dalla v4.
+- Restano attivi gradienti per tipo, sfondi tematici allenatori, sprite e foglio Collezione.
 
-COME PROVARLA SU PC
-1. Apri un terminale dentro questa cartella.
-2. Esegui: python -m http.server 8080
-3. Apri http://localhost:8080
+GITHUB PAGES
+1. Sostituisci i file del repository con quelli di questa cartella.
+2. Fai commit/push su main.
+3. Apri GitHub Pages con rete attiva.
+4. In alto dovresti vedere v10.0.0 · Collezione.
 
-COME USARLA SU CELLULARE
-La cartella va pubblicata su un hosting statico HTTPS (es. GitHub Pages, Netlify, Cloudflare Pages).
-Poi apri il link dal telefono e scegli “Aggiungi alla schermata Home”.
+V8: rimosso bordo/sfondo attorno allo sprite centrale dell'allenatore; corretto il cursore della barra di ricerca durante il filtraggio live.
 
-DATI
-Le modifiche posseduto/non posseduto sono salvate localmente nel browser (localStorage).
-Non modificano il file Excel originale e non sono sincronizzate tra dispositivi in questa prima versione.
-
-IMMAGINI
-Gli sprite vengono caricati automaticamente da PokemonDB usando il nome del Pokémon.
-Per forme o nomi non standard può comparire il fallback con iniziale; possiamo aggiungere una mappa specifica nella versione successiva.
+V8: Omar il Distruttore usa lo sprite Crasher Wake; Hoopa usa un allenatore Psichico Gen 6 al posto dello sprite Pokémon per evitare problemi di layout.
